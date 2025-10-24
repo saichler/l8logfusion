@@ -1,7 +1,6 @@
 package logs
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/saichler/l8bus/go/overlay/vnic"
@@ -11,14 +10,25 @@ import (
 )
 
 func Main() ifs.IResources {
-	if len(os.Args) != 4 {
-		fmt.Printf("Usage: %s <vnet ip> <path> <filename> (* for all) \n", os.Args[0])
-		return nil
+	ip := os.Getenv("NODE_IP")
+	if ip == "" {
+		panic("Env variable NODE_IP is not set")
 	}
+
+	logpath := os.Getenv("LOGPATH")
+	if logpath == "" {
+		panic("Env variable LOGPATH is not set")
+	}
+
+	logfile := os.Getenv("LOGFILE")
+	if logfile == "" {
+		panic("Env variable LOGFILE is not set")
+	}
+
 	r := common.NewResources("logs")
-	r.SysConfig().RemoteVnet = os.Args[1]
+	r.SysConfig().RemoteVnet = ip
 	nic := vnic.NewVirtualNetworkInterface(r, nil)
-	lc := &l8logf.L8LogConfig{Path: os.Args[2], Name: os.Args[3]}
+	lc := &l8logf.L8LogConfig{Path: logpath, Name: logfile}
 	collector := NewLogCollector(lc, nic)
 	collector.Collect()
 	return nil
