@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package l8logf;
+
+option java_multiple_files = true;
+option java_outer_classname = "L8logf";
+option java_package = "com.types.l8logf";
+option go_package = "./types/l8logf";
+
+message L8LogFList {
+  repeated L8LogF list = 1;
+  map<string, int32> stats = 2;
+}
+
+message L8LogF {
+  string sourceIp = 1;
+  string filename = 2;
+  repeated string logs = 3;
+}
+
+message L8LogConfigs {
+  map<string, L8LogConfig> logs = 1;
+}
+
+message L8LogConfig {
+  string path = 1;
+  string name = 2;
+}
