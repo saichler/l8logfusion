@@ -10,6 +10,7 @@ import (
 	"github.com/saichler/l8logfusion/go/types/l8logf"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8utils/go/utils/strings"
+	common2 "github.com/saichler/netop/go/common"
 )
 
 type LogCollector struct {
@@ -36,6 +37,7 @@ func (this LogCollector) Collect() {
 			subCollector := NewLogCollector(subLog, this.vnic)
 			go subCollector.Collect()
 		}
+		common2.WaitForSignal(this.vnic.Resources())
 		return
 	}
 
