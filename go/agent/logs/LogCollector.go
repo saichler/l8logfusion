@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/saichler/l8bus/go/overlay/protocol"
 	"github.com/saichler/l8logfusion/go/agent/common"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
 	"github.com/saichler/l8types/go/ifs"
@@ -57,7 +56,7 @@ func (this LogCollector) Collect() {
 
 func SendLogs(filename string, nic ifs.IVNic, logs ...string) {
 	logF := &l8logf.L8LogF{}
-	logF.SourceIp = protocol.MachineIP
+	logF.SourceIp = os.Getenv("NODE_IP")
 	logF.Filename = filename
 	logF.Logs = logs
 	nic.Unicast(nic.Resources().SysConfig().RemoteUuid, common.LogServiceName, common.LogServiceArea, ifs.POST, logF)

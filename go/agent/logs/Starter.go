@@ -30,7 +30,7 @@ func Main() ifs.IResources {
 	nic := vnic.NewVirtualNetworkInterface(r, nil)
 	nic.Start()
 	nic.WaitForConnection()
-	
+
 	lc := &l8logf.L8LogConfig{Path: logpath, Name: logfile}
 	collector := NewLogCollector(lc, nic)
 	collector.Collect()
