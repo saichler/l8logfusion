@@ -26,3 +26,10 @@ message L8LogConfig {
   string path = 1;
   string name = 2;
 }
+
+message L8File {
+  bool isDirectory = 1;
+  string name = 2;
+  string path = 3;
+  repeated L8File files = 4;
+}

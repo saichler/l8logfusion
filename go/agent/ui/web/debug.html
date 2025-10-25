@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Layout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #333;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: yellow;
+        }
+
+        .app-header {
+            background: red;
+            height: 60px;
+            color: white;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 10px;
+            background: green;
+            overflow: hidden;
+        }
+
+        .section-container {
+            background: blue;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+
+        .log-header-frame {
+            height: 150px;
+            background: purple;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            background: orange;
+        }
+
+        .tree-panel {
+            width: 350px;
+            background: pink;
+            color: black;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .log-panel {
+            flex: 1;
+            background: lightblue;
+            color: black;
+            padding: 10px;
+            overflow-y: auto;
+        }
+    </style>
+    <script>
+        console.log('=== DEBUG.HTML LOADED ===');
+        console.log('Current URL:', window.location.href);
+
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('=== DOM CONTENT LOADED ===');
+
+            const appContainer = document.querySelector('.app-container');
+            const header = document.querySelector('.app-header');
+            const mainContent = document.querySelector('.main-content');
+            const sectionContainer = document.querySelector('.section-container');
+            const headerFrame = document.querySelector('.log-header-frame');
+            const contentArea = document.querySelector('.content-area');
+            const treePanel = document.querySelector('.tree-panel');
+            const logPanel = document.querySelector('.log-panel');
+
+            console.log('App Container found:', appContainer !== null);
+            console.log('Header found:', header !== null);
+            console.log('Main Content found:', mainContent !== null);
+            console.log('Section Container found:', sectionContainer !== null);
+            console.log('Header Frame found:', headerFrame !== null);
+            console.log('Content Area found:', contentArea !== null);
+            console.log('Tree Panel found:', treePanel !== null);
+            console.log('Log Panel found:', logPanel !== null);
+
+            if (appContainer) {
+                const rect = appContainer.getBoundingClientRect();
+                console.log('App Container size:', rect.width, 'x', rect.height);
+            }
+
+            if (contentArea) {
+                const rect = contentArea.getBoundingClientRect();
+                console.log('Content Area size:', rect.width, 'x', rect.height);
+            }
+
+            if (treePanel) {
+                const rect = treePanel.getBoundingClientRect();
+                console.log('Tree Panel size:', rect.width, 'x', rect.height);
+                console.log('Tree Panel computed style:', window.getComputedStyle(treePanel).width);
+            }
+
+            if (logPanel) {
+                const rect = logPanel.getBoundingClientRect();
+                console.log('Log Panel size:', rect.width, 'x', rect.height);
+            }
+
+            console.log('=== END DEBUG INFO ===');
+        });
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            HEADER (RED) - If you see this, basic layout works
+        </div>
+
+        <div class="main-content">
+            <div class="section-container">
+                <div class="log-header-frame">
+                    TITLE FRAME (PURPLE) - 150px height
+                </div>
+
+                <div class="content-area">
+                    <div class="tree-panel">
+                        <h3>TREE (PINK)</h3>
+                        <p>Left panel - 350px wide</p>
+                        <p>If you see this pink panel on the left, the layout is working!</p>
+                    </div>
+
+                    <div class="log-panel">
+                        <h3>LOGS (LIGHT BLUE)</h3>
+                        <p>Right panel - takes remaining space</p>
+                        <p>If you see this blue panel on the right, the layout is working!</p>
+                        <p>You should see:</p>
+                        <ul>
+                            <li>Red header at top</li>
+                            <li>Purple title frame below it</li>
+                            <li>Pink tree panel on left</li>
+                            <li>Light blue log panel on right</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

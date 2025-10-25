@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Viewer</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="section-container">
+                <!-- Full Frame Header with Parallax -->
+                <div class="log-header-frame parallax-container">
+                    <!-- Background Illustration -->
+                    <div class="log-header-bg parallax-layer" data-speed="0.5">
+                        <svg class="log-illustration" viewBox="0 0 1200 150" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:#0284c7;stop-opacity:0.1" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Grid -->
+                            <g opacity="0.1">
+                                <line x1="0" y1="30" x2="1200" y2="30" stroke="#0ea5e9" stroke-width="0.5"/>
+                                <line x1="0" y1="75" x2="1200" y2="75" stroke="#0ea5e9" stroke-width="0.5"/>
+                                <line x1="0" y1="120" x2="1200" y2="120" stroke="#0ea5e9" stroke-width="0.5"/>
+                                <line x1="200" y1="0" x2="200" y2="150" stroke="#0ea5e9" stroke-width="0.5"/>
+                                <line x1="400" y1="0" x2="400" y2="150" stroke="#0ea5e9" stroke-width="0.5"/>
+                                <line x1="600" y1="0" x2="600" y2="150" stroke="#0ea5e9" stroke-width="0.5"/>
+                                <line x1="800" y1="0" x2="800" y2="150" stroke="#0ea5e9" stroke-width="0.5"/>
+                                <line x1="1000" y1="0" x2="1000" y2="150" stroke="#0ea5e9" stroke-width="0.5"/>
+                            </g>
+                            <!-- Log Files -->
+                            <rect x="500" y="40" width="80" height="70" rx="4" fill="url(#grad1)"/>
+                            <line x1="510" y1="55" x2="570" y2="55" stroke="#0ea5e9" stroke-width="2" opacity="0.7"/>
+                            <line x1="510" y1="65" x2="565" y2="65" stroke="#0ea5e9" stroke-width="2" opacity="0.5"/>
+                            <line x1="510" y1="75" x2="570" y2="75" stroke="#0ea5e9" stroke-width="2" opacity="0.7"/>
+                            <line x1="510" y1="85" x2="560" y2="85" stroke="#0ea5e9" stroke-width="2" opacity="0.5"/>
+                            <circle cx="515" cy="55" r="2" fill="#00ff41">
+                                <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+                            </circle>
+                            <!-- Folder -->
+                            <path d="M 200,60 L 200,50 L 230,50 L 240,60 L 280,60 L 280,100 L 200,100 Z" fill="url(#grad1)" opacity="0.5"/>
+                            <!-- Data Particles -->
+                            <circle cx="100" cy="75" r="2" fill="#0ea5e9" opacity="0.6">
+                                <animate attributeName="cx" values="100;500" dur="3s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" values="0;0.6;0" dur="3s" repeatCount="indefinite"/>
+                            </circle>
+                        </svg>
+                    </div>
+                    <!-- Header Content -->
+                    <div class="log-header-content parallax-layer" data-speed="1">
+                        <div class="log-header-title">
+                            <div class="log-icon">
+                                <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="8" y="4" width="24" height="32" rx="2" fill="none" stroke="#0ea5e9" stroke-width="2"/>
+                                    <line x1="12" y1="10" x2="28" y2="10" stroke="#0ea5e9" stroke-width="2"/>
+                                    <line x1="12" y1="16" x2="26" y2="16" stroke="#0ea5e9" stroke-width="2"/>
+                                    <line x1="12" y1="22" x2="28" y2="22" stroke="#0ea5e9" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h1 class="frame-title">Log File Management</h1>
+                                <p class="frame-subtitle">Monitor and Analyze System Logs</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Area with Two Columns -->
+                <div class="content-area">
+                    <!-- Left: Tree View -->
+                    <div class="tree-panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">File System</h2>
+                        </div>
+                        <div class="tree-container">
+                            <div id="tree-view"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Log Display -->
+                    <div class="log-panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Log Content</h2>
+                            <span class="file-path" id="file-path">No file selected</span>
+                        </div>
+
+                        <!-- Pagination on TOP -->
+                        <div class="pagination-container">
+                            <div class="pagination-info">
+                                <span id="page-info">Showing lines 0-100</span>
+                            </div>
+                            <div class="pagination-controls">
+                                <button id="first-page" class="pagination-btn" disabled>⏮ First</button>
+                                <button id="prev-page" class="pagination-btn" disabled>◀ Prev</button>
+                                <button id="next-page" class="pagination-btn" disabled>Next ▶</button>
+                                <button id="last-page" class="pagination-btn" disabled>Last ⏭</button>
+                            </div>
+                        </div>
+
+                        <!-- Log Content -->
+                        <div class="log-content">
+                            <pre id="log-display">Select a log file from the tree to view its contents</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=3"></script>
+    <script src="parallax.js?v=3"></script>
+</body>
+</html>

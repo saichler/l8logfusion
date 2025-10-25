@@ -4,8 +4,12 @@ import (
 	"os"
 	"sync"
 
+	"github.com/saichler/l8logfusion/go/agent/common"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
+	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8web"
+	"github.com/saichler/l8utils/go/utils/web"
 )
 
 type LogService struct {
@@ -71,7 +75,8 @@ func (this *LogService) Delete(elements ifs.IElements, vnic ifs.IVNic) ifs.IElem
 }
 
 func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return nil
+	l8file := common.FileOf("/data/logdb")
+	return object.New(nil, l8file)
 }
 
 func (this *LogService) Failed(elements ifs.IElements, vnic ifs.IVNic, msg *ifs.Message) ifs.IElements {
@@ -83,5 +88,8 @@ func (this *LogService) TransactionConfig() ifs.ITransactionConfig {
 }
 
 func (this *LogService) WebService() ifs.IWebService {
-	return nil
+	ws := web.New(common.LogServiceName, common.LogServiceArea, nil,
+		nil, nil, nil, nil, nil, nil, nil,
+		&l8web.L8Empty{}, &l8logf.L8File{})
+	return ws
 }

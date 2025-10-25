@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Console Test</title>
+    <style>
+        body {
+            background: black;
+            color: lime;
+            font-family: monospace;
+            padding: 20px;
+            font-size: 16px;
+        }
+        .box {
+            border: 2px solid lime;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>CONSOLE TEST PAGE</h1>
+    <div class="box">
+        <h2>Instructions:</h2>
+        <ol>
+            <li>Press F12 to open Developer Tools</li>
+            <li>Click on the "Console" tab</li>
+            <li>Look for messages that say "TEST MESSAGE"</li>
+            <li>Take a screenshot of what you see</li>
+        </ol>
+    </div>
+
+    <div class="box">
+        <h2>What you should see in console:</h2>
+        <pre>
+TEST MESSAGE 1: Script loaded
+TEST MESSAGE 2: DOM ready
+TEST MESSAGE 3: Body background is black
+        </pre>
+    </div>
+
+    <script>
+        console.log('TEST MESSAGE 1: Script loaded');
+        console.log('Current URL:', window.location.href);
+        console.log('Document ready state:', document.readyState);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('TEST MESSAGE 2: DOM ready');
+
+            const body = document.body;
+            const computedStyle = window.getComputedStyle(body);
+            console.log('TEST MESSAGE 3: Body background is', computedStyle.backgroundColor);
+
+            console.log('Body size:', body.offsetWidth, 'x', body.offsetHeight);
+        });
+    </script>
+</body>
+</html>
