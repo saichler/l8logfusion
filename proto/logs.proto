@@ -32,4 +32,12 @@ message L8File {
   string name = 2;
   string path = 3;
   repeated L8File files = 4;
+  L8FileData data = 5;
+}
+
+message L8FileData {
+  int32 limit = 1;
+  int32 page = 2;
+  int32 size = 3;
+  string content = 4;
 }

@@ -1,9 +1,10 @@
 // Global state
-let currentLogContent = [];
+let currentLogContent = '';
 let currentPage = 0;
-const linesPerPage = 100;
+const bytesPerPage = 5120; // 5KB per page
 let selectedFile = null;
 let totalFiles = 0;
+let totalBytes = 0;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,43 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeaderStats();
 });
 
-// Load tree data - using example data directly
-function loadTreeData() {
-    const exampleData = {
-        "isDirectory": true,
-        "files": [
-            {
-                "isDirectory": true,
-                "name": "192.168.86.220",
-                "path": "/data/logdb",
-                "files": [
-                    {
-                        "isDirectory": true,
-                        "name": "logs",
-                        "path": "/data/logdb/192.168.86.220",
-                        "files": [
-                            {
-                                "name": "log.log",
-                                "path": "/data/logdb/192.168.86.220/logs"
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "isDirectory": true,
-                "name": "logs",
-                "path": "/data/logdb",
-                "files": [
-                    {
-                        "name": "log.log",
-                        "path": "/data/logdb/logs"
-                    }
-                ]
-            }
-        ]
-    };
-    renderTree(exampleData);
+// Load tree data from REST API
+async function loadTreeData() {
+    try {
+        const response = await fetch('/probler/87/logs');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        renderTree(data);
+    } catch (error) {
+        console.error('Error loading tree data:', error);
+        const treeView = document.getElementById('tree-view');
+        treeView.innerHTML = '<div style="color: var(--text-muted); padding: 10px;">Error loading log files. Please try again later.</div>';
+    }
 }
 
 // Render the tree view
@@ -162,22 +140,66 @@ function selectFile(nodeElement, fileItem) {
     loadLogContent(fullPath);
 }
 
-// Load log content - using sample data directly
-function loadLogContent(filePath) {
-    const sampleLogs = [];
-    for (let i = 1; i <= 250; i++) {
-        sampleLogs.push(`[2025-10-25 ${String(Math.floor(i / 60)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}:00] INFO - Log entry number ${i} - Sample log message for testing purposes`);
+// Load log content from file
+async function loadLogContent(filePath) {
+    try {
+        // Reset to first page
+        currentPage = 0;
+        // Load the first page
+        await loadLogPage(filePath, currentPage);
+    } catch (error) {
+        console.error('Error loading log content:', error);
+        currentLogContent = 'Error loading log content. Please try again later.';
+        totalBytes = 0;
+        displayCurrentPage();
     }
-    currentLogContent = sampleLogs;
-    currentPage = 0;
-    displayCurrentPage();
+}
+
+// Load a specific page of log content
+async function loadLogPage(filePath, page) {
+    try {
+        // Parse path and name from filePath
+        const lastSlashIndex = filePath.lastIndexOf('/');
+        const path = filePath.substring(0, lastSlashIndex);
+        const name = filePath.substring(lastSlashIndex + 1);
+
+        // Build the SQL-like query text
+        const queryText = `select * from l8file where path=${path} and name = ${name} limit 1 page ${page}`;
+
+        // Create the body parameter as JSON
+        const bodyParam = JSON.stringify({ text: queryText });
+
+        // Build query URL with body parameter
+        const url = `/probler/87/logs?body=${encodeURIComponent(bodyParam)}`;
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Update state with the returned data
+        if (data.data) {
+            currentLogContent = data.data.content || '';
+            totalBytes = data.data.size || 0;
+            currentPage = page;
+        } else {
+            currentLogContent = '';
+            totalBytes = 0;
+        }
+
+        displayCurrentPage();
+    } catch (error) {
+        console.error('Error loading log page:', error);
+        currentLogContent = 'Error loading log content. Please try again later.';
+        totalBytes = 0;
+        displayCurrentPage();
+    }
 }
 
 // Display the current page of logs
 function displayCurrentPage() {
-    const start = currentPage * linesPerPage;
-    const end = Math.min(start + linesPerPage, currentLogContent.length);
-
     const logDisplay = document.getElementById('log-display');
     const pageInfo = document.getElementById('page-info');
     const firstButton = document.getElementById('first-page');
@@ -185,9 +207,9 @@ function displayCurrentPage() {
     const nextButton = document.getElementById('next-page');
     const lastButton = document.getElementById('last-page');
 
-    if (currentLogContent.length === 0) {
+    if (totalBytes === 0) {
         logDisplay.textContent = 'No log content available';
-        pageInfo.textContent = 'Showing lines 0-0';
+        pageInfo.textContent = 'Showing bytes 0-0 of 0 (0 KB)';
         firstButton.disabled = true;
         prevButton.disabled = true;
         nextButton.disabled = true;
@@ -195,22 +217,25 @@ function displayCurrentPage() {
         return;
     }
 
-    // Display logs with line numbers
-    const logsToDisplay = currentLogContent.slice(start, end);
-    const numberedLogs = logsToDisplay.map((line, idx) => {
-        const lineNumber = start + idx + 1;
-        return `${String(lineNumber).padStart(6, ' ')} | ${line}`;
-    }).join('\n');
+    // Display the content directly
+    logDisplay.textContent = currentLogContent;
 
-    logDisplay.textContent = numberedLogs;
+    // Calculate byte ranges
+    const startByte = currentPage * bytesPerPage + 1;
+    const endByte = Math.min(startByte + currentLogContent.length - 1, totalBytes);
+    const totalPages = Math.ceil(totalBytes / bytesPerPage);
 
-    // Update pagination info
-    const totalPages = Math.ceil(currentLogContent.length / linesPerPage);
-    pageInfo.textContent = `Showing lines ${start + 1}-${end} of ${currentLogContent.length} (Page ${currentPage + 1}/${totalPages})`;
+    // Format sizes in KB for display
+    const startKB = (startByte / 1024).toFixed(2);
+    const endKB = (endByte / 1024).toFixed(2);
+    const totalKB = (totalBytes / 1024).toFixed(2);
+
+    // Update pagination info with byte ranges
+    pageInfo.textContent = `Showing bytes ${startByte}-${endByte} of ${totalBytes} (${startKB}-${endKB} KB of ${totalKB} KB) | Page ${currentPage + 1}/${totalPages}`;
 
     // Update button states
     const isFirstPage = currentPage === 0;
-    const isLastPage = end >= currentLogContent.length;
+    const isLastPage = (currentPage + 1) >= totalPages;
 
     firstButton.disabled = isFirstPage;
     prevButton.disabled = isFirstPage;
@@ -225,33 +250,33 @@ function initializePagination() {
     const nextButton = document.getElementById('next-page');
     const lastButton = document.getElementById('last-page');
 
-    firstButton.addEventListener('click', () => {
-        if (currentPage > 0) {
-            currentPage = 0;
-            displayCurrentPage();
+    firstButton.addEventListener('click', async () => {
+        if (currentPage > 0 && selectedFile) {
+            const fullPath = selectedFile.path + '/' + selectedFile.name;
+            await loadLogPage(fullPath, 0);
         }
     });
 
-    prevButton.addEventListener('click', () => {
-        if (currentPage > 0) {
-            currentPage--;
-            displayCurrentPage();
+    prevButton.addEventListener('click', async () => {
+        if (currentPage > 0 && selectedFile) {
+            const fullPath = selectedFile.path + '/' + selectedFile.name;
+            await loadLogPage(fullPath, currentPage - 1);
         }
     });
 
-    nextButton.addEventListener('click', () => {
-        const maxPage = Math.ceil(currentLogContent.length / linesPerPage) - 1;
-        if (currentPage < maxPage) {
-            currentPage++;
-            displayCurrentPage();
+    nextButton.addEventListener('click', async () => {
+        const maxPage = Math.ceil(totalBytes / bytesPerPage) - 1;
+        if (currentPage < maxPage && selectedFile) {
+            const fullPath = selectedFile.path + '/' + selectedFile.name;
+            await loadLogPage(fullPath, currentPage + 1);
         }
     });
 
-    lastButton.addEventListener('click', () => {
-        const maxPage = Math.ceil(currentLogContent.length / linesPerPage) - 1;
-        if (currentPage < maxPage) {
-            currentPage = maxPage;
-            displayCurrentPage();
+    lastButton.addEventListener('click', async () => {
+        const maxPage = Math.ceil(totalBytes / bytesPerPage) - 1;
+        if (currentPage < maxPage && selectedFile) {
+            const fullPath = selectedFile.path + '/' + selectedFile.name;
+            await loadLogPage(fullPath, maxPage);
         }
     });
 }

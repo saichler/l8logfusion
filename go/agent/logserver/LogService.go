@@ -6,9 +6,10 @@ import (
 
 	"github.com/saichler/l8logfusion/go/agent/common"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
+	"github.com/saichler/l8reflect/go/reflect/introspecting"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
-	"github.com/saichler/l8types/go/types/l8web"
+	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8utils/go/utils/web"
 )
 
@@ -31,6 +32,8 @@ func (this *LogService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic)
 	if err != nil {
 		panic(err)
 	}
+	node, _ := vnic.Resources().Introspector().Inspect(l8logf.L8File{})
+	introspecting.AddPrimaryKeyDecorator(node, "Path", "Name")
 	return err
 }
 
@@ -75,8 +78,17 @@ func (this *LogService) Delete(elements ifs.IElements, vnic ifs.IVNic) ifs.IElem
 }
 
 func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	l8file := common.FileOf("/data/logdb")
-	return object.New(nil, l8file)
+	q, err := elements.Query(vnic.Resources())
+	if err != nil {
+		return object.NewError(err.Error())
+	}
+	if q == nil {
+		l8file := common.FileOf("/data/logdb")
+		return object.New(nil, l8file)
+	}
+	resp, err := LoadData(q)
+	return object.New(err, resp)
+
 }
 
 func (this *LogService) Failed(elements ifs.IElements, vnic ifs.IVNic, msg *ifs.Message) ifs.IElements {
@@ -90,6 +102,6 @@ func (this *LogService) TransactionConfig() ifs.ITransactionConfig {
 func (this *LogService) WebService() ifs.IWebService {
 	ws := web.New(common.LogServiceName, common.LogServiceArea, nil,
 		nil, nil, nil, nil, nil, nil, nil,
-		&l8web.L8Empty{}, &l8logf.L8File{})
+		&l8api.L8Query{}, &l8logf.L8File{})
 	return ws
 }
