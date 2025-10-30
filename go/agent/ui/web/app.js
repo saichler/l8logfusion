@@ -16,7 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load tree data from REST API
 async function loadTreeData() {
     try {
-        const response = await fetch('/probler/87/logs');
+        // Create the body parameter as JSON
+        const bodyParam = JSON.stringify({ text: "select * from l8file where path=\"*\" mapreduce true" });
+
+        // Build query URL with body parameter
+        const url = `/probler/87/logs?body=${encodeURIComponent(bodyParam)}`;
+
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -164,7 +170,7 @@ async function loadLogPage(filePath, page) {
         const name = filePath.substring(lastSlashIndex + 1);
 
         // Build the SQL-like query text
-        const queryText = `select * from l8file where path=${path} and name = ${name} limit 1 page ${page}`;
+        const queryText = `select * from l8file where path=${path} and name = ${name} limit 1 page ${page} mapreduce true`;
 
         // Create the body parameter as JSON
         const bodyParam = JSON.stringify({ text: queryText });

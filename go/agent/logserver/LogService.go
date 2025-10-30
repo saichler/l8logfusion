@@ -77,12 +77,35 @@ func (this *LogService) Delete(elements ifs.IElements, vnic ifs.IVNic) ifs.IElem
 	return nil
 }
 
+func (this *LogService) Merge(results map[string]ifs.IElements) ifs.IElements {
+	result := &l8logf.L8File{}
+	result.Files = make([]*l8logf.L8File, 0)
+	for _, elems := range results {
+		for _, elem := range elems.Elements() {
+			l := elem.(*l8logf.L8File)
+			if l.Files != nil {
+				for _, file := range l.Files {
+					result.Files = append(result.Files, file)
+				}
+			}
+			if l.Data != nil {
+				result.Data = l.Data
+			}
+		}
+	}
+	return object.New(nil, result)
+}
+
 func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	q, err := elements.Query(vnic.Resources())
 	if err != nil {
 		return object.NewError(err.Error())
 	}
 	if q == nil {
+		l8file := common.FileOf("/data/logdb")
+		return object.New(nil, l8file)
+	}
+	if q.ValueForParameter("path") == "\"*\"" {
 		l8file := common.FileOf("/data/logdb")
 		return object.New(nil, l8file)
 	}

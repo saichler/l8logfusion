@@ -25,7 +25,7 @@ func main() {
 		panic("Env variable LOGFILE is not set")
 	}
 
-	r := utils.NewResources("logs", 12443, 30)
+	r := utils.NewResources("logs", 26000, 30)
 	r.SysConfig().RemoteVnet = ip
 
 	nic := vnic.NewVirtualNetworkInterface(r, nil)
