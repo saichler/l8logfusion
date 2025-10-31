@@ -1,6 +1,7 @@
 package logserver
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -78,6 +79,7 @@ func (this *LogService) Delete(elements ifs.IElements, vnic ifs.IVNic) ifs.IElem
 }
 
 func (this *LogService) Merge(results map[string]ifs.IElements) ifs.IElements {
+	fmt.Println("Merge Log files called with ", len(results))
 	result := &l8logf.L8File{}
 	result.Files = make([]*l8logf.L8File, 0)
 	for _, elems := range results {
@@ -102,10 +104,12 @@ func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElement
 		return object.NewError(err.Error())
 	}
 	if q == nil {
+		fmt.Println("Query is nill ")
 		l8file := common.FileOf("/data/logdb")
 		return object.New(nil, l8file)
 	}
 	if q.ValueForParameter("path") == "\"*\"" {
+		fmt.Println("Path is *")
 		l8file := common.FileOf("/data/logdb")
 		return object.New(nil, l8file)
 	}
