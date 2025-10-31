@@ -90,7 +90,7 @@ func (this *LogService) Merge(results map[string]ifs.IElements) ifs.IElements {
 					result.Files = append(result.Files, file)
 				}
 			}
-			if l.Data != nil {
+			if l.Data != nil && l.Data.Content != "" {
 				result.Data = l.Data
 			}
 		}
