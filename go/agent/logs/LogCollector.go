@@ -36,7 +36,7 @@ func (this LogCollector) collect(path, name string) {
 		} else if strings2.HasSuffix(file.Name(), ".log") ||
 			strings2.HasSuffix(file.Name(), ".err") {
 			subLog := &l8logf.L8LogConfig{}
-			subLog.Path = this.logConfig.Path
+			subLog.Path = path
 			subLog.Name = file.Name()
 			subCollector := NewLogCollector(subLog, this.vnic)
 			go subCollector.Collect()
