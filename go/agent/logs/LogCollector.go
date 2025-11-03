@@ -3,6 +3,8 @@ package logs
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	strings2 "strings"
 	"time"
 
 	"github.com/saichler/l8bus/go/overlay/protocol"
@@ -22,21 +24,30 @@ func NewLogCollector(logConfig *l8logf.L8LogConfig, vnic ifs.IVNic) *LogCollecto
 	return &LogCollector{logConfig: logConfig, vnic: vnic}
 }
 
-func (this LogCollector) Collect() {
-	name := strings.New("agent-", this.logConfig.Path).String()
-	if this.logConfig.Name == "*" {
-		files, err := os.ReadDir(this.logConfig.Path)
-		if err != nil {
-			SendLogs(name, this.vnic, err.Error())
-			return
-		}
-		for _, file := range files {
+func (this LogCollector) collect(path, name string) {
+	files, err := os.ReadDir(path)
+	if err != nil {
+		SendLogs(name, this.vnic, err.Error())
+		return
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			this.collect(filepath.Join(path, file.Name()), name)
+		} else if strings2.HasSuffix(file.Name(), ".log") ||
+			strings2.HasSuffix(file.Name(), ".err") {
 			subLog := &l8logf.L8LogConfig{}
 			subLog.Path = this.logConfig.Path
 			subLog.Name = file.Name()
 			subCollector := NewLogCollector(subLog, this.vnic)
 			go subCollector.Collect()
 		}
+	}
+}
+
+func (this LogCollector) Collect() {
+	name := strings.New("agent-", this.logConfig.Path).String()
+	if this.logConfig.Name == "*" {
+		this.collect(this.logConfig.Path, name)
 		common2.WaitForSignal(this.vnic.Resources())
 		return
 	}
