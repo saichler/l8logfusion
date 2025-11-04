@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L8LogFusion - Distributed Log Aggregation System</title>
+    <link rel="icon" type="image/gif" href="Layer8Logo.gif">
+    <style>
+        :root {
+            --primary-color: #1a1f2e;
+            --secondary-color: #d4af37;
+            --accent-color: #e6c157;
+            --background-color: #f8f9fa;
+            --text-color: #2d3748;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --parallax-bg: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+            --log-color: #27ae60;
+            --error-color: #e74c3c;
+            --info-color: #3498db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Parallax Header */
+        .parallax-header {
+            height: 100vh;
+            background: var(--parallax-bg);
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .parallax-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8cGF0aCBkPSJNIDEwIDAgTCAwIDAgMCAxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPC9wYXR0ZXJuPgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiAvPgo8L3N2Zz4=') repeat;
+            opacity: 0.1;
+        }
+
+        .parallax-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 0 2rem;
+        }
+
+        .parallax-header h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .parallax-header .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .parallax-header .tagline {
+            font-size: 1.1rem;
+            font-style: italic;
+            opacity: 0.8;
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Log Stream Animation */
+        .log-stream-illustration {
+            position: absolute;
+            top: 50%;
+            right: 10%;
+            transform: translateY(-50%);
+            opacity: 0.2;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(10px); }
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav li {
+            margin: 0;
+        }
+
+        nav a {
+            display: block;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        /* Main Content */
+        main {
+            padding: 3rem 0;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        h4 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            color: var(--primary-color);
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h4 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Log Flow Diagram */
+        .log-flow-diagram {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .flow-container {
+            position: relative;
+            margin: 2rem 0;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .flow-node {
+            background: var(--secondary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            position: absolute;
+            min-width: 120px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .flow-node:hover {
+            transform: scale(1.1);
+            background: var(--accent-color);
+        }
+
+        .flow-node.collector {
+            background: var(--log-color);
+        }
+
+        .flow-node.server {
+            background: var(--primary-color);
+        }
+
+        .flow-node.ui {
+            background: var(--info-color);
+        }
+
+        /* Position flow nodes */
+        .node-1 { top: 50%; left: 10%; transform: translateY(-50%); }
+        .node-2 { top: 50%; left: 45%; transform: translateY(-50%); }
+        .node-3 { top: 50%; right: 10%; transform: translateY(-50%); }
+        .node-4 { top: 20%; left: 30%; }
+        .node-5 { bottom: 20%; left: 30%; }
+
+        /* Connection arrows */
+        .flow-arrow {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: var(--secondary-color);
+            transform-origin: left center;
+            opacity: 0.7;
+        }
+
+        .flow-arrow::after {
+            content: '→';
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            font-size: 20px;
+            color: var(--secondary-color);
+        }
+
+        /* Parallax Sections */
+        .parallax-section {
+            min-height: 60vh;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .architecture-parallax {
+            background: linear-gradient(45deg, #34495e 0%, #2c3e50 100%);
+        }
+
+        .features-parallax {
+            background: linear-gradient(45deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .parallax-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+        }
+
+        .parallax-section .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .parallax-section h2 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Log Icons */
+        .log-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
+        }
+
+        .log-icon::before {
+            content: '📝';
+            font-size: 24px;
+        }
+
+        .collector-icon::before { content: '📊'; }
+        .server-icon::before { content: '💾'; }
+        .ui-icon::before { content: '🖥️'; }
+        .docker-icon::before { content: '🐳'; }
+        .proto-icon::before { content: '🔗'; }
+
+        /* Code blocks */
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        /* Features list */
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-item {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .feature-item h4 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        /* Architecture overview */
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .component-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--secondary-color);
+        }
+
+        .component-card.collector {
+            border-top-color: var(--log-color);
+        }
+
+        .component-card.server {
+            border-top-color: var(--primary-color);
+        }
+
+        .component-card.ui {
+            border-top-color: var(--info-color);
+        }
+
+        /* Interactive elements */
+        .interactive-demo {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .demo-button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .demo-button:hover {
+            background: var(--primary-color);
+        }
+
+        .status-display {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #ecf0f1;
+            border-radius: var(--border-radius);
+            font-family: monospace;
+        }
+
+        /* Log Terminal Animation */
+        .log-terminal {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            font-family: 'Courier New', monospace;
+            margin: 2rem 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            min-height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: #2c3e50;
+            margin: -1.5rem -1.5rem 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            color: #ecf0f1;
+            font-size: 0.9rem;
+        }
+
+        .log-line {
+            margin: 0.2rem 0;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Stats Counter */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .parallax-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            .flow-node {
+                position: relative;
+                margin: 1rem;
+            }
+
+            .flow-container {
+                flex-direction: column;
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Full-page parallax header -->
+    <div class="parallax-header">
+        <div class="parallax-content">
+            <img src="Layer8Logo.gif" alt="Layer 8 Logo" style="width: 75px; height: 75px; margin-bottom: 2rem; border-radius: 50%; box-shadow: 0 8px 25px rgba(0,0,0,0.3);">
+            <h1>L8LogFusion</h1>
+            <div class="subtitle">Distributed Log Aggregation & Fusion System</div>
+            <div class="tagline">"Unify, Monitor, and Analyze Your Distributed Logs"</div>
+            <div style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">Go 1.24.9 | Protocol Buffers | Docker Ready</div>
+        </div>
+
+        <!-- Log Stream Animation -->
+        <div class="log-stream-illustration">
+            <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <!-- Central Server -->
+                <circle cx="100" cy="100" r="25" fill="rgba(255,255,255,0.8)" filter="url(#glow)"/>
+                <text x="100" y="105" text-anchor="middle" fill="#2c3e50" font-size="10" font-weight="bold">SERVER</text>
+
+                <!-- Log Sources -->
+                <circle cx="40" cy="40" r="15" fill="rgba(255,255,255,0.6)" filter="url(#glow)"/>
+                <text x="40" y="44" text-anchor="middle" fill="#2c3e50" font-size="8">LOG</text>
+
+                <circle cx="160" cy="40" r="15" fill="rgba(255,255,255,0.6)" filter="url(#glow)"/>
+                <text x="160" y="44" text-anchor="middle" fill="#2c3e50" font-size="8">LOG</text>
+
+                <circle cx="40" cy="160" r="15" fill="rgba(255,255,255,0.6)" filter="url(#glow)"/>
+                <text x="40" y="164" text-anchor="middle" fill="#2c3e50" font-size="8">LOG</text>
+
+                <circle cx="160" cy="160" r="15" fill="rgba(255,255,255,0.6)" filter="url(#glow)"/>
+                <text x="160" y="164" text-anchor="middle" fill="#2c3e50" font-size="8">LOG</text>
+
+                <!-- Data flow lines -->
+                <line x1="55" y1="55" x2="85" y2="85" stroke="rgba(255,255,255,0.5)" stroke-width="2" filter="url(#glow)"/>
+                <line x1="145" y1="55" x2="115" y2="85" stroke="rgba(255,255,255,0.5)" stroke-width="2" filter="url(#glow)"/>
+                <line x1="55" y1="145" x2="85" y2="115" stroke="rgba(255,255,255,0.5)" stroke-width="2" filter="url(#glow)"/>
+                <line x1="145" y1="145" x2="115" y2="115" stroke="rgba(255,255,255,0.5)" stroke-width="2" filter="url(#glow)"/>
+
+                <!-- Log data animation -->
+                <circle r="3" fill="#00ff00">
+                    <animateMotion dur="2s" repeatCount="indefinite">
+                        <path d="M40,40 L100,100"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#00ff00">
+                    <animateMotion dur="2s" begin="0.5s" repeatCount="indefinite">
+                        <path d="M160,40 L100,100"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#00ff00">
+                    <animateMotion dur="2s" begin="1s" repeatCount="indefinite">
+                        <path d="M40,160 L100,100"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#00ff00">
+                    <animateMotion dur="2s" begin="1.5s" repeatCount="indefinite">
+                        <path d="M160,160 L100,100"/>
+                    </animateMotion>
+                </circle>
+            </svg>
+        </div>
+    </div>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#components">Components</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#deployment">Deployment</a></li>
+                <li><a href="#api">API Reference</a></li>
+                <li><a href="#usage">Usage</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <section id="overview">
+                <h2>Overview</h2>
+                <p style="font-size: 1.1rem; text-align: center; margin-bottom: 2rem;">
+                    L8LogFusion is a powerful distributed log aggregation and fusion system designed to collect, centralize,
+                    and browse logs from multiple sources in containerized environments. Built with Go and Protocol Buffers,
+                    it provides real-time log collection, intelligent buffering, and web-based browsing capabilities for
+                    modern cloud-native applications.
+                </p>
+
+                <!-- Key Stats Banner -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Core Components</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">5KB</div>
+                        <div class="stat-label">Page Size</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">∞</div>
+                        <div class="stat-label">Log Sources</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">Real-time</div>
+                        <div class="stat-label">Processing</div>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="log-icon collector-icon"></div>
+                        <h4>Intelligent Collection</h4>
+                        <p>Real-time monitoring and collection from multiple sources with automatic file rotation detection and crash recovery with resume capability.</p>
+                    </div>
+                    <div class="card">
+                        <div class="log-icon server-icon"></div>
+                        <h4>Centralized Storage</h4>
+                        <p>High-performance central server that persists logs organized by source IP and filename with optimized file handle caching.</p>
+                    </div>
+                    <div class="card">
+                        <div class="log-icon ui-icon"></div>
+                        <h4>Web-Based UI</h4>
+                        <p>Interactive web interface for browsing and querying logs with health monitoring endpoints and file tree navigation.</p>
+                    </div>
+                </div>
+            </section>
+
+        <!-- Parallax Architecture Section -->
+        <div class="parallax-section architecture-parallax">
+            <div class="parallax-overlay"></div>
+            <div class="container">
+                <h2>Architecture Overview</h2>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 3rem 0;">
+        <div class="container">
+            <section id="architecture">
+
+                <div class="log-flow-diagram">
+                    <h3>Log Processing Pipeline</h3>
+                    <div class="flow-container">
+                        <div class="flow-node collector node-1" data-info="Log Collector Agent - Scans and tails log files">Log Collector</div>
+                        <div class="flow-arrow" style="left: 25%; top: 50%; width: 150px; transform: translateY(-50%);"></div>
+                        <div class="flow-node server node-2" data-info="Central Log Server - Receives and persists logs">Log Server</div>
+                        <div class="flow-arrow" style="left: 58%; top: 50%; width: 150px; transform: translateY(-50%);"></div>
+                        <div class="flow-node ui node-3" data-info="Web UI - Browse and query logs">Web UI</div>
+                        <div class="flow-node collector node-4" data-info="Additional collectors for distributed sources">Collector 2</div>
+                        <div class="flow-node collector node-5" data-info="Additional collectors for distributed sources">Collector 3</div>
+                    </div>
+                    <p><em>Click on nodes to see more information</em></p>
+                </div>
+
+                <div class="architecture-grid">
+                    <div class="component-card collector">
+                        <h4>Log Collector Agent</h4>
+                        <ul>
+                            <li><strong>Directory Scanning</strong> - Monitors for .log and .err files</li>
+                            <li><strong>Real-time Tailing</strong> - Follows file changes with rotation detection</li>
+                            <li><strong>Intelligent Buffering</strong> - Batches entries for efficient transmission</li>
+                            <li><strong>Wildcard Support</strong> - Flexible collection patterns</li>
+                        </ul>
+                    </div>
+                    <div class="component-card server">
+                        <h4>Central Log Server</h4>
+                        <ul>
+                            <li><strong>REST API</strong> - Full CRUD operations on logs</li>
+                            <li><strong>Organized Storage</strong> - By source IP and filename</li>
+                            <li><strong>File Handle Caching</strong> - Optimized I/O performance</li>
+                            <li><strong>Virtual Network Port</strong> - Runs on port 12443</li>
+                        </ul>
+                    </div>
+                    <div class="component-card ui">
+                        <h4>Web Interface</h4>
+                        <ul>
+                            <li><strong>Health Monitoring</strong> - System status endpoints</li>
+                            <li><strong>File Tree Navigation</strong> - Browse log hierarchy</li>
+                            <li><strong>Query Interface</strong> - Search and filter logs</li>
+                            <li><strong>Port 26000</strong> - Default web server port</li>
+                        </ul>
+                    </div>
+                    <div class="component-card" style="border-top-color: #f39c12;">
+                        <h4>Protocol & Transport</h4>
+                        <ul>
+                            <li><strong>Protocol Buffers</strong> - Efficient serialization</li>
+                            <li><strong>Virtual Network Overlay</strong> - L8Bus integration</li>
+                            <li><strong>Batch Processing</strong> - Optimized throughput</li>
+                            <li><strong>Type Safety</strong> - Generated protobuf types</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="components">
+                <h2>Core Components</h2>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Log Collector Agent</h4>
+                        <p><strong>Location:</strong> <code>go/agent/logs/</code></p>
+                        <p><strong>Purpose:</strong> Distributed log collection agent</p>
+                        <ul>
+                            <li>Scans directories for .log and .err files</li>
+                            <li>Real-time file tailing with rotation detection</li>
+                            <li>Buffers and batches log entries</li>
+                            <li>Supports wildcard patterns</li>
+                            <li>Crash recovery with resume capability</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h4>Log Server</h4>
+                        <p><strong>Location:</strong> <code>go/agent/logserver/</code></p>
+                        <p><strong>Purpose:</strong> Central log aggregation service</p>
+                        <ul>
+                            <li>REST API for log operations</li>
+                            <li>Organized persistence by source/file</li>
+                            <li>5KB pagination support</li>
+                            <li>File handle caching</li>
+                            <li>Virtual network port 12443</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h4>Web UI</h4>
+                        <p><strong>Location:</strong> <code>go/agent/ui/</code></p>
+                        <p><strong>Purpose:</strong> Browser-based log viewer</p>
+                        <ul>
+                            <li>Interactive web interface</li>
+                            <li>Health monitoring endpoints</li>
+                            <li>File tree navigation</li>
+                            <li>Query and filter capabilities</li>
+                            <li>Runs on port 26000</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        <!-- Parallax Features Section -->
+        <div class="parallax-section features-parallax">
+            <div class="parallax-overlay"></div>
+            <div class="container">
+                <h2>Key Features</h2>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 3rem 0;">
+        <div class="container">
+            <section id="features">
+
+                <div class="features-list">
+                    <div class="feature-item">
+                        <div class="log-icon"></div>
+                        <h4>Real-time Collection</h4>
+                        <p>Monitors and collects logs from multiple sources in real-time with intelligent buffering for optimal performance.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon collector-icon"></div>
+                        <h4>File Rotation Handling</h4>
+                        <p>Automatically detects and handles log file rotations, ensuring no data loss during rotation events.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon server-icon"></div>
+                        <h4>Distributed Architecture</h4>
+                        <p>Service-oriented design with virtual network overlay for seamless inter-component communication.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon ui-icon"></div>
+                        <h4>Web-Based Browsing</h4>
+                        <p>Interactive web UI for browsing and querying collected logs with intuitive file tree navigation.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon"></div>
+                        <h4>Efficient Pagination</h4>
+                        <p>Optimized retrieval of large log files with 5KB per page pagination for smooth browsing experience.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon docker-icon"></div>
+                        <h4>Container Ready</h4>
+                        <p>Docker-ready components designed for cloud-native environments with easy deployment options.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon proto-icon"></div>
+                        <h4>Protocol Buffers</h4>
+                        <p>Type-safe, efficient data serialization using Protocol Buffers for optimal network performance.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon"></div>
+                        <h4>Crash Recovery</h4>
+                        <p>Resilient design with resume capability from last read position after unexpected failures.</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="log-icon collector-icon"></div>
+                        <h4>Wildcard Support</h4>
+                        <p>Flexible collection patterns with wildcard support for dynamic log file discovery.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+        </div>
+
+            <section id="deployment">
+                <h2>Deployment</h2>
+
+                <div class="card">
+                    <h3>Docker Images</h3>
+                    <p>L8LogFusion provides three production-ready Docker images for easy deployment:</p>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Log Agent</h4>
+                        <p><strong>Image:</strong> <code>saichler/probler-logagent:latest</code></p>
+                        <div class="code-block">
+docker run -d \
+  -e NODE_IP=auto \
+  -e LOGPATH=/var/log \
+  -e LOGFILE="*" \
+  -v /var/log:/var/log:ro \
+  saichler/probler-logagent:latest
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h4>Log Server</h4>
+                        <p><strong>Image:</strong> <code>saichler/probler-logserver:latest</code></p>
+                        <div class="code-block">
+docker run -d \
+  -v /data/logdb:/data/logdb \
+  saichler/probler-logserver:latest 12443
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h4>Web UI</h4>
+                        <p><strong>Image:</strong> <code>saichler/probler-logsui:latest</code></p>
+                        <div class="code-block">
+docker run -d \
+  -p 26000:26000 \
+  -v /data/probler:/data/probler \
+  saichler/probler-logsui:latest
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Docker Compose Configuration</h3>
+                    <div class="code-block">
+version: '3.8'
+services:
+  logserver:
+    image: saichler/probler-logserver:latest
+    command: ["12443"]
+    volumes:
+      - /data/logdb:/data/logdb
+
+  logagent:
+    image: saichler/probler-logagent:latest
+    environment:
+      - NODE_IP=auto
+      - LOGPATH=/var/log
+      - LOGFILE=*
+    volumes:
+      - /var/log:/var/log:ro
+
+  logsui:
+    image: saichler/probler-logsui:latest
+    ports:
+      - "26000:26000"
+    volumes:
+      - /data/probler:/data/probler
+                    </div>
+                </div>
+            </section>
+
+            <section id="api">
+                <h2>API Reference</h2>
+
+                <div class="card">
+                    <h3>REST Endpoints</h3>
+                    <p>The Log Server provides a comprehensive REST API for log operations:</p>
+
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <h4>POST /logs</h4>
+                            <p>Submit new log entries to the server. Accepts L8LogF protocol buffer messages.</p>
+                        </div>
+
+                        <div class="feature-item">
+                            <h4>GET /logs</h4>
+                            <p>Query stored logs with pagination support. Returns logs in 5KB pages.</p>
+                        </div>
+
+                        <div class="feature-item">
+                            <h4>PUT /logs</h4>
+                            <p>Update existing log entries. Replaces entire log records.</p>
+                        </div>
+
+                        <div class="feature-item">
+                            <h4>PATCH /logs</h4>
+                            <p>Merge log entries. Appends new logs to existing records.</p>
+                        </div>
+
+                        <div class="feature-item">
+                            <h4>DELETE /logs</h4>
+                            <p>Remove log entries. Deletes specified log records from storage.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Protocol Buffer Messages</h3>
+                    <div class="code-block">
+// Main log fusion message
+message L8LogF {
+    string sourceIp = 1;        // IP of source machine
+    string filename = 2;        // Log file name
+    repeated string logs = 3;   // Array of log lines
+}
+
+// Log collector configuration
+message L8LogConfig {
+    string path = 1;           // Directory to monitor
+    string name = 2;           // Filename or "*" for all
+}
+                    </div>
+                </div>
+
+                <div class="interactive-demo">
+                    <h3>Interactive Log Demo</h3>
+                    <p>Simulate log processing operations and see how L8LogFusion handles different scenarios:</p>
+
+                    <button class="demo-button" onclick="simulateCollection()">Simulate Collection</button>
+                    <button class="demo-button" onclick="simulateRotation()">File Rotation</button>
+                    <button class="demo-button" onclick="simulateAggregation()">Aggregation</button>
+                    <button class="demo-button" onclick="simulateQuery()">Query Logs</button>
+                    <button class="demo-button" onclick="simulateHealth()">Health Check</button>
+                    <button class="demo-button" onclick="clearDemo()">Clear</button>
+
+                    <div class="status-display" id="demo-status">
+                        Ready to simulate log operations...
+                    </div>
+                </div>
+            </section>
+
+            <section id="usage">
+                <h2>Usage Examples</h2>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Running the Log Collector</h4>
+                        <div class="code-block">
+# Set environment variables
+export NODE_IP=192.168.1.100
+export LOGPATH=/var/log
+export LOGFILE="*"  # Collect all .log/.err files
+
+# Run the collector
+go run go/agent/logs/docker/main.go
+                        </div>
+                        <p>Start collecting logs from the specified directory with automatic file discovery.</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>Starting the Log Server</h4>
+                        <div class="code-block">
+# Start server on virtual network port 12443
+go run go/agent/logserver/docker/main.go 12443
+
+# Server will listen for incoming log streams
+# Logs stored at /data/logdb/{sourceIP}/{filename}
+                        </div>
+                        <p>Launch the central server that receives and persists logs from all collectors.</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>Accessing the Web UI</h4>
+                        <div class="code-block">
+# Start the web UI (port 26000)
+go run go/agent/ui/main.go
+
+# Access in browser
+http://localhost:26000
+
+# Health check endpoint
+http://localhost:26000/health
+                        </div>
+                        <p>Launch the web interface for browsing and querying collected logs.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Storage Structure</h3>
+                    <div class="code-block">
+/data/logdb/
+├── 192.168.1.100/
+│   ├── application.log
+│   ├── error.log
+│   └── system.log
+├── 192.168.1.101/
+│   ├── nginx.log
+│   └── access.log
+└── 192.168.1.102/
+    ├── database.log
+    └── query.log
+                    </div>
+                    <p>Logs are organized by source IP address and filename for efficient retrieval and management.</p>
+                </div>
+
+                <div class="log-terminal">
+                    <div class="terminal-header">Live Log Stream - L8LogFusion</div>
+                    <div id="log-stream">
+                        <div class="log-line" style="animation-delay: 0.1s">[2025-11-03 10:15:23] INFO: Log collector started on node 192.168.1.100</div>
+                        <div class="log-line" style="animation-delay: 0.3s">[2025-11-03 10:15:24] INFO: Monitoring directory: /var/log</div>
+                        <div class="log-line" style="animation-delay: 0.5s">[2025-11-03 10:15:24] INFO: Found 5 log files matching pattern: *.log</div>
+                        <div class="log-line" style="animation-delay: 0.7s">[2025-11-03 10:15:25] INFO: Starting tail on application.log</div>
+                        <div class="log-line" style="animation-delay: 0.9s">[2025-11-03 10:15:25] INFO: Starting tail on error.log</div>
+                        <div class="log-line" style="animation-delay: 1.1s">[2025-11-03 10:15:26] INFO: Buffering 1024 log entries...</div>
+                        <div class="log-line" style="animation-delay: 1.3s">[2025-11-03 10:15:27] INFO: Transmitting batch to server at 12443</div>
+                        <div class="log-line" style="animation-delay: 1.5s">[2025-11-03 10:15:28] SUCCESS: Batch transmitted successfully</div>
+                        <div class="log-line" style="animation-delay: 1.7s">[2025-11-03 10:15:29] INFO: File rotation detected on system.log</div>
+                        <div class="log-line" style="animation-delay: 1.9s">[2025-11-03 10:15:30] INFO: Continuing collection from new file...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Dependencies</h3>
+                    <p>L8LogFusion leverages the Layer 8 ecosystem for robust distributed operations:</p>
+                    <ul style="margin: 1rem 0;">
+                        <li><strong>l8bus</strong> - Virtual network overlay for communication</li>
+                        <li><strong>l8types</strong> - Shared type definitions</li>
+                        <li><strong>l8utils</strong> - Utility functions and helpers</li>
+                        <li><strong>l8reflect</strong> - Reflection-based introspection</li>
+                        <li><strong>l8srlz</strong> - Serialization support</li>
+                        <li><strong>l8web</strong> - Web server framework</li>
+                        <li><strong>probler</strong> - Monitoring and profiling</li>
+                        <li><strong>Protocol Buffers</strong> - Efficient data serialization</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 L8LogFusion. A comprehensive distributed log aggregation solution.</p>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem;">Go 1.24.9 | Protocol Buffers | Docker Ready | Apache 2.0 License</p>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem;">Created by Shai Saichler</p>
+        </div>
+    </footer>
+
+    <script>
+        // Interactive log demo functions
+        function simulateCollection() {
+            const status = document.getElementById('demo-status');
+            status.innerHTML = `
+<strong>Log Collection Simulation:</strong><br>
+1. Scanning directory /var/log for .log and .err files...<br>
+2. Found 8 matching files: [app.log, error.log, system.log, access.log, debug.log, auth.log, kernel.log, boot.log]<br>
+3. Starting tail processes on all files...<br>
+4. Buffering incoming log entries (batch size: 1024)...<br>
+5. ✓ Collection active on 8 files, 2,456 entries buffered
+            `;
+        }
+
+        function simulateRotation() {
+            const status = document.getElementById('demo-status');
+            status.innerHTML = `
+<strong>File Rotation Simulation:</strong><br>
+1. File rotation detected: application.log renamed to application.log.1<br>
+2. New file created: application.log (empty)<br>
+3. Closing handle to old file, preserving read position...<br>
+4. Opening new file for tailing...<br>
+5. ✓ Rotation handled seamlessly, no data loss
+            `;
+        }
+
+        function simulateAggregation() {
+            const status = document.getElementById('demo-status');
+            status.innerHTML = `
+<strong>Log Aggregation Simulation:</strong><br>
+1. Receiving logs from 5 collector agents...<br>
+2. Source IPs: [192.168.1.100, 192.168.1.101, 192.168.1.102, 192.168.1.103, 192.168.1.104]<br>
+3. Total log entries received: 12,847 in last minute<br>
+4. Writing to persistent storage at /data/logdb...<br>
+5. ✓ All logs aggregated and persisted successfully
+            `;
+        }
+
+        function simulateQuery() {
+            const status = document.getElementById('demo-status');
+            status.innerHTML = `
+<strong>Query Logs Simulation:</strong><br>
+1. Query received: GET /logs?source=192.168.1.100&file=application.log&page=1<br>
+2. Opening file handle from cache...<br>
+3. Reading 5KB page (lines 1-127)...<br>
+4. Formatting response with pagination metadata...<br>
+5. ✓ Returned 127 log entries in 12ms
+            `;
+        }
+
+        function simulateHealth() {
+            const status = document.getElementById('demo-status');
+            status.innerHTML = `
+<strong>Health Check Status:</strong><br>
+1. Collectors Active: 5/5 (100%)<br>
+2. Server Status: HEALTHY (uptime: 48h 23m)<br>
+3. Storage Usage: 2.3GB / 100GB (2.3%)<br>
+4. Current Throughput: 1,250 logs/sec<br>
+5. ✓ All systems operational
+            `;
+        }
+
+        function clearDemo() {
+            const status = document.getElementById('demo-status');
+            status.innerHTML = 'Ready to simulate log operations...';
+        }
+
+        // Add click handlers for flow nodes
+        document.addEventListener('DOMContentLoaded', function() {
+            const nodes = document.querySelectorAll('.flow-node');
+            nodes.forEach(node => {
+                node.addEventListener('click', function() {
+                    const info = this.getAttribute('data-info');
+                    if (info) {
+                        alert(info);
+                    }
+                });
+            });
+
+            // Add more log lines dynamically
+            setInterval(() => {
+                const logStream = document.getElementById('log-stream');
+                if (logStream && logStream.children.length < 20) {
+                    const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+                    const messages = [
+                        'INFO: Processing log batch...',
+                        'INFO: New connection from collector',
+                        'INFO: File rotation detected',
+                        'SUCCESS: Batch persisted to disk',
+                        'INFO: Query executed successfully'
+                    ];
+                    const message = messages[Math.floor(Math.random() * messages.length)];
+                    const newLine = document.createElement('div');
+                    newLine.className = 'log-line';
+                    newLine.style.animationDelay = '0s';
+                    newLine.textContent = `[${timestamp}] ${message}`;
+                    logStream.appendChild(newLine);
+
+                    // Remove old lines
+                    if (logStream.children.length > 15) {
+                        logStream.removeChild(logStream.children[0]);
+                    }
+                }
+            }, 3000);
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
