@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/saichler/l8bus/go/overlay/protocol"
 	"github.com/saichler/l8bus/go/overlay/vnet"
 	"github.com/saichler/l8bus/go/overlay/vnic"
 	"github.com/saichler/l8logfusion/go/agent/common"
@@ -15,10 +14,11 @@ import (
 	"github.com/saichler/l8logfusion/go/agent/logserver"
 	"github.com/saichler/l8logfusion/go/agent/ui/websvr"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
+	"github.com/saichler/l8reflect/go/reflect/helping"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8utils/go/utils"
+	"github.com/saichler/l8utils/go/utils/ipsegment"
 	"github.com/saichler/l8utils/go/utils/logger"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -39,7 +39,7 @@ func startVnet() *vnet.VNet {
 func startNic(logDir, logFile string) ifs.IVNic {
 	os.MkdirAll(logDir, 0755)
 	r := utils.NewResources("logs", vnetPort, 0)
-	r.SysConfig().RemoteVnet = protocol.MachineIP
+	r.SysConfig().RemoteVnet = ipsegment.MachineIP
 	nic := vnic.NewVirtualNetworkInterface(r, nil)
 	nic.Start()
 	nic.WaitForConnection()
@@ -51,7 +51,6 @@ func startNic(logDir, logFile string) ifs.IVNic {
 }
 
 func TestLogsService(t *testing.T) {
-	ifs.LogToFiles = false
 	logDir := "./logs"
 	logFile := "log.log"
 	os.MkdirAll(logDir, 0755)
@@ -98,7 +97,7 @@ func TestLogsService(t *testing.T) {
 	}
 
 	node, _ := nic.Resources().Introspector().Inspect(l8logf.L8File{})
-	introspecting.AddPrimaryKeyDecorator(node, "Path", "Name")
+	helping.AddPrimaryKeyDecorator(node, "Path", "Name")
 
 	elems, e := object.NewQuery("select * from l8file where path=/data/logdb/192.168.86.220/logs and name = log.log limit 100 page 0", nic.Resources())
 	if e != nil {
