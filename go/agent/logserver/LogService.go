@@ -7,7 +7,7 @@ import (
 
 	"github.com/saichler/l8logfusion/go/agent/common"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
+	"github.com/saichler/l8reflect/go/reflect/helping"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
@@ -34,7 +34,7 @@ func (this *LogService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic)
 		panic(err)
 	}
 	node, _ := vnic.Resources().Introspector().Inspect(l8logf.L8File{})
-	introspecting.AddPrimaryKeyDecorator(node, "Path", "Name")
+	helping.AddPrimaryKeyDecorator(node, "Path", "Name")
 	return err
 }
 

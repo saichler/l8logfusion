@@ -7,10 +7,10 @@ import (
 	strings2 "strings"
 	"time"
 
-	"github.com/saichler/l8bus/go/overlay/protocol"
 	"github.com/saichler/l8logfusion/go/agent/common"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8utils/go/utils/ipsegment"
 	"github.com/saichler/l8utils/go/utils/strings"
 	common2 "github.com/saichler/netop/go/common"
 )
@@ -70,7 +70,7 @@ func SendLogs(filename string, nic ifs.IVNic, logs ...string) {
 	logF := &l8logf.L8LogF{}
 	logF.SourceIp = os.Getenv("NODE_IP")
 	if logF.SourceIp == "" {
-		logF.SourceIp = protocol.MachineIP
+		logF.SourceIp = ipsegment.MachineIP
 	}
 	logF.Filename = filename
 	logF.Logs = logs

@@ -4,22 +4,22 @@ import (
 	"os"
 
 	"github.com/saichler/l8bus/go/overlay/health"
-	"github.com/saichler/l8bus/go/overlay/protocol"
 	"github.com/saichler/l8bus/go/overlay/vnic"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
+	"github.com/saichler/l8reflect/go/reflect/helping"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8types/go/types/l8health"
 	"github.com/saichler/l8types/go/types/l8web"
 	"github.com/saichler/l8utils/go/utils"
+	"github.com/saichler/l8utils/go/utils/ipsegment"
 	"github.com/saichler/l8web/go/web/server"
 	common2 "github.com/saichler/probler/go/prob/common"
 )
 
 func StartWebServer(port int, cert string) {
 	serverConfig := &server.RestServerConfig{
-		Host:           protocol.MachineIP,
+		Host:           ipsegment.MachineIP,
 		Port:           port,
 		Authentication: false,
 		CertName:       cert,
@@ -43,7 +43,7 @@ func StartWebServer(port int, cert string) {
 	nic.Resources().Registry().Register(&l8health.L8HealthList{})
 	nic.Resources().Registry().Register(&l8logf.L8File{})
 	node, _ := nic.Resources().Introspector().Inspect(&l8logf.L8File{})
-	introspecting.AddPrimaryKeyDecorator(node, "Path", "Name")
+	helping.AddPrimaryKeyDecorator(node, "Path", "Name")
 
 	hs, ok := nic.Resources().Services().ServiceHandler(health.ServiceName, 0)
 	if ok {
