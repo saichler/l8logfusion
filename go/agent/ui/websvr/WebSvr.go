@@ -6,7 +6,6 @@ import (
 	"github.com/saichler/l8bus/go/overlay/health"
 	"github.com/saichler/l8bus/go/overlay/vnic"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
-	"github.com/saichler/l8reflect/go/reflect/helping"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8types/go/types/l8health"
@@ -42,8 +41,7 @@ func StartWebServer(port int, cert string) {
 	nic.Resources().Registry().Register(&l8health.L8Health{})
 	nic.Resources().Registry().Register(&l8health.L8HealthList{})
 	nic.Resources().Registry().Register(&l8logf.L8File{})
-	node, _ := nic.Resources().Introspector().Inspect(&l8logf.L8File{})
-	helping.AddPrimaryKeyDecorator(node, "Path", "Name")
+	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8logf.L8File{}, "Path", "Name")
 
 	hs, ok := nic.Resources().Services().ServiceHandler(health.ServiceName, 0)
 	if ok {

@@ -14,7 +14,6 @@ import (
 	"github.com/saichler/l8logfusion/go/agent/logserver"
 	"github.com/saichler/l8logfusion/go/agent/ui/websvr"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
-	"github.com/saichler/l8reflect/go/reflect/helping"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8utils/go/utils"
@@ -95,9 +94,7 @@ func TestLogsService(t *testing.T) {
 		nic.Resources().Logger().Fail(t, "local logs file size not equal")
 		return
 	}
-
-	node, _ := nic.Resources().Introspector().Inspect(l8logf.L8File{})
-	helping.AddPrimaryKeyDecorator(node, "Path", "Name")
+	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8logf.L8File{}, "Path", "Name")
 
 	elems, e := object.NewQuery("select * from l8file where path=/data/logdb/192.168.86.220/logs and name = log.log limit 100 page 0", nic.Resources())
 	if e != nil {
