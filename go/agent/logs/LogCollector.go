@@ -2,6 +2,7 @@ package logs
 
 import (
 	"fmt"
+	common2 "github.com/saichler/probler/go/prob/common"
 	"os"
 	"path/filepath"
 	strings2 "strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8utils/go/utils/ipsegment"
 	"github.com/saichler/l8utils/go/utils/strings"
-	common2 "github.com/saichler/netop/go/common"
 )
 
 type LogCollector struct {
