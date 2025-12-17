@@ -125,8 +125,7 @@ func (this *LogService) TransactionConfig() ifs.ITransactionConfig {
 }
 
 func (this *LogService) WebService() ifs.IWebService {
-	ws := web.New(common.LogServiceName, common.LogServiceArea, nil,
-		nil, nil, nil, nil, nil, nil, nil,
-		&l8api.L8Query{}, &l8logf.L8File{})
+	ws := web.New(common.LogServiceName, common.LogServiceArea, 0)
+	ws.AddEndpoint(&l8api.L8Query{}, ifs.GET, &l8logf.L8File{})
 	return ws
 }

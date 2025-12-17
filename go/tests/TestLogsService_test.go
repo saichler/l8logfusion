@@ -96,11 +96,13 @@ func TestLogsService(t *testing.T) {
 	}
 	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8logf.L8File{}, "Path", "Name")
 
-	elems, e := object.NewQuery("select * from l8file where path=/data/logdb/192.168.86.220/logs and name = log.log limit 100 page 0", nic.Resources())
+	elemsS, e := object.NewQuery("select * from l8file where path=/data/logdb/192.168.86.220/logs and name = log.log limit 100 page 0", nic.Resources())
 	if e != nil {
 		nic.Resources().Logger().Fail(t, "query logs failed: ", e)
 		return
 	}
+
+	elems := elemsS.(*object.Elements)
 
 	q, _ := elems.Query(nic.Resources())
 	jsn, _ := protojson.Marshal(elems.PQuery())
