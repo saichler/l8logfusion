@@ -183,7 +183,7 @@ func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElement
 		l8file := common.FileOf("/data/logdb")
 		return object.New(nil, l8file)
 	}
-	fmt.Println("Load Data case")
+	fmt.Println("Load Data case ", q.ValueForParameter("path"))
 	resp, err := LoadData(q)
 	return object.New(err, resp)
 
