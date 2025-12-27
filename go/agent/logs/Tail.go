@@ -1,3 +1,18 @@
+/*
+ * © 2025 Sharon Aicler (saichler@gmail.com)
+ *
+ * Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+ * You may obtain a copy of the License at:
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package logs
 
 import (
@@ -12,7 +27,7 @@ import (
 	"github.com/saichler/l8utils/go/utils/queues"
 )
 
-// TailFile tails a file and prints each new line.
+// TailFile continuously monitors a log file and transmits new lines to the log server.
 // It handles file truncation by detecting when the file size becomes smaller.
 // The location parameter specifies where to start tailing:
 //   - location == 0: start from the beginning of the file

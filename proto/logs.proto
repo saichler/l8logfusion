@@ -1,3 +1,24 @@
+/*
+ * © 2025 Sharon Aicler (saichler@gmail.com)
+ *
+ * Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+ * You may obtain a copy of the License at:
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// L8LogFusion Protocol Buffer Definitions
+//
+// This file defines the data structures used for log aggregation and transmission
+// in the L8LogFusion distributed logging system. These messages are used for
+// communication between log collectors, the central log server, and the web UI.
+
 syntax = "proto3";
 
 package l8logf;
@@ -7,37 +28,66 @@ option java_outer_classname = "L8logf";
 option java_package = "com.types.l8logf";
 option go_package = "./types/l8logf";
 
+// L8LogFList represents a collection of log entries with optional statistics.
+// Used for batch operations and aggregated log retrieval.
 message L8LogFList {
+  // list contains the individual log entries in this batch
   repeated L8LogF list = 1;
+  // stats provides optional aggregation statistics (e.g., count per source)
   map<string, int32> stats = 2;
 }
 
+// L8LogF represents a batch of log lines from a single source file.
+// This is the primary message type transmitted from collectors to the log server.
 message L8LogF {
+  // sourceIp identifies the machine where the logs originated (e.g., "192.168.1.100")
   string sourceIp = 1;
+  // filename is the name of the source log file (e.g., "application.log")
   string filename = 2;
+  // logs contains the actual log lines, each element is one line of text
   repeated string logs = 3;
 }
 
+// L8LogConfigs holds a map of named log collection configurations.
+// Used for managing multiple log sources on a single node.
 message L8LogConfigs {
+  // logs maps configuration names to their respective L8LogConfig settings
   map<string, L8LogConfig> logs = 1;
 }
 
+// L8LogConfig specifies the configuration for monitoring a log source.
+// Used by the log collector agent to determine which files to tail.
 message L8LogConfig {
+  // path is the directory path containing log files (e.g., "/var/log")
   string path = 1;
+  // name is the specific filename to monitor, or "*" for all .log/.err files
   string name = 2;
 }
 
+// L8File represents a file or directory in the log storage hierarchy.
+// Used by the web UI for file tree navigation and content display.
 message L8File {
+  // isDirectory indicates whether this entry represents a directory (true) or file (false)
   bool isDirectory = 1;
+  // name is the file or directory name (e.g., "application.log" or "192.168.1.100")
   string name = 2;
+  // path is the parent directory path (e.g., "/data/logdb/192.168.1.100")
   string path = 3;
+  // files contains child entries when isDirectory is true
   repeated L8File files = 4;
+  // data contains file content and pagination info when reading a file
   L8FileData data = 5;
 }
 
+// L8FileData contains paginated file content for efficient large file retrieval.
+// The log server uses 5KB pages for optimal browser performance.
 message L8FileData {
+  // limit specifies the maximum number of bytes to return (typically 5120)
   int32 limit = 1;
+  // page is the zero-based page number for pagination
   int32 page = 2;
+  // size is the total file size in bytes
   int32 size = 3;
+  // content contains the actual file content for the requested page
   string content = 4;
 }

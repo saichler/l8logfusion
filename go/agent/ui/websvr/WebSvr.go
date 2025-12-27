@@ -1,3 +1,27 @@
+/*
+ * © 2025 Sharon Aicler (saichler@gmail.com)
+ *
+ * Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+ * You may obtain a copy of the License at:
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Package websvr provides the web server component for L8LogFusion's browser-based UI.
+// It initializes and configures the REST server for log browsing, health monitoring,
+// and query operations via the Layer 8 virtual network.
+//
+// Key features:
+//   - REST API endpoints for log queries
+//   - Health monitoring dashboard
+//   - File tree navigation for browsing logs by source
+//   - Integration with Layer 8 service framework
 package websvr
 
 import (
@@ -16,6 +40,19 @@ import (
 	common2 "github.com/saichler/probler/go/prob/common"
 )
 
+// StartWebServer initializes and starts the REST web server for log browsing.
+// It configures the server with TLS, connects to the log server via the virtual
+// network, and registers all necessary web service endpoints.
+//
+// Parameters:
+//   - port: HTTP/HTTPS port to listen on (typically 26000)
+//   - cert: Path to TLS certificate directory
+//
+// The server:
+//   - Connects to the log server on port 12443
+//   - Registers health monitoring endpoints
+//   - Enables web service endpoint discovery
+//   - Blocks until server shutdown
 func StartWebServer(port int, cert string) {
 	serverConfig := &server.RestServerConfig{
 		Host:           ipsegment.MachineIP,

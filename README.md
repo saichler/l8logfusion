@@ -1,6 +1,11 @@
 # L8LogFusion
 
+**Part of the Layer 8 Ecosystem**
+
 A distributed log aggregation and fusion system for collecting, centralizing, and browsing logs from multiple sources in containerized environments.
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Go Version](https://img.shields.io/badge/Go-1.24.9-00ADD8.svg)](https://go.dev/)
 
 ## Overview
 
@@ -230,12 +235,36 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 ## Author
 
-Shai Saichler
+**Sharon Aicler** (saichler@gmail.com)
 
 ## Support
 
 For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/saichler/l8logfusion).
+
+## Layer 8 Ecosystem
+
+L8LogFusion is part of the Layer 8 Ecosystem, a suite of tools for building distributed systems:
+
+- [l8bus](https://github.com/saichler/l8bus) - Virtual network overlay
+- [l8types](https://github.com/saichler/l8types) - Shared type definitions
+- [l8utils](https://github.com/saichler/l8utils) - Utility functions
+- [l8reflect](https://github.com/saichler/l8reflect) - Reflection-based introspection
+- [l8srlz](https://github.com/saichler/l8srlz) - Serialization support
+- [l8orm](https://github.com/saichler/l8orm) - Object-relational mapping
+- [l8web](https://github.com/saichler/l8web) - Web server framework
+- [probler](https://github.com/saichler/probler) - Monitoring and profiling

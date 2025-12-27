@@ -1,3 +1,18 @@
+/*
+ * © 2025 Sharon Aicler (saichler@gmail.com)
+ *
+ * Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+ * You may obtain a copy of the License at:
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package tests
 
 import (
@@ -23,10 +38,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// vnetPort is the virtual network port used for test communication.
 const (
 	vnetPort = uint16(12443)
 )
 
+// startVnet creates and starts a virtual network with the log service activated.
+// Returns the running VNet instance for test coordination.
 func startVnet() *vnet.VNet {
 	r := utils.NewResources("logsVnet", vnetPort, 0)
 	vnt := vnet.NewVNet(r)
@@ -35,6 +53,15 @@ func startVnet() *vnet.VNet {
 	return vnt
 }
 
+// startNic creates a virtual network interface and starts a log collector.
+// It connects to the test VNet and begins collecting logs from the specified directory.
+//
+// Parameters:
+//   - logDir: Directory to create and monitor for logs
+//   - logFile: Specific log filename to monitor
+//
+// Returns:
+//   - ifs.IVNic: The initialized virtual network interface
 func startNic(logDir, logFile string) ifs.IVNic {
 	os.MkdirAll(logDir, 0755)
 	r := utils.NewResources("logs", vnetPort, 0)
@@ -49,6 +76,17 @@ func startNic(logDir, logFile string) ifs.IVNic {
 	return nic
 }
 
+// TestLogsService is an integration test that validates the complete log collection pipeline.
+// It creates a VNet with the log service, starts a collector, writes test logs,
+// and verifies that logs are correctly transmitted and stored on the server.
+//
+// The test:
+//  1. Starts a virtual network with the log service
+//  2. Creates a collector connected to the VNet
+//  3. Writes 1000 test log entries
+//  4. Verifies the server received all log entries
+//  5. Tests the query API for log retrieval
+//  6. Starts the web server for manual verification
 func TestLogsService(t *testing.T) {
 	logDir := "./logs"
 	logFile := "log.log"
