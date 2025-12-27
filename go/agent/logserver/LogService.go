@@ -178,7 +178,7 @@ func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElement
 		l8file := common.FileOf("/data/logdb")
 		return object.New(nil, l8file)
 	}
-	if q.ValueForParameter("path") == "\"*\"" {
+	if q.ValueForParameter("path") == "*" {
 		fmt.Println("Path is *")
 		l8file := common.FileOf("/data/logdb")
 		return object.New(nil, l8file)
