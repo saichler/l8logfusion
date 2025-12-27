@@ -170,6 +170,7 @@ func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElement
 	fmt.Println("Get Log files called with ", len(elements.Elements()))
 	q, err := elements.Query(vnic.Resources())
 	if err != nil {
+		fmt.Println("Error: ", err.Error())
 		return object.NewError(err.Error())
 	}
 	if q == nil {
@@ -182,6 +183,7 @@ func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElement
 		l8file := common.FileOf("/data/logdb")
 		return object.New(nil, l8file)
 	}
+	fmt.Println("Load Data case")
 	resp, err := LoadData(q)
 	return object.New(err, resp)
 
