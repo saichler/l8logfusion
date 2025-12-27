@@ -167,6 +167,7 @@ func (this *LogService) Merge(results map[string]ifs.IElements) ifs.IElements {
 // Returns:
 //   - ifs.IElements: L8File containing directory listing or file content
 func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElements {
+	fmt.Println("Get Log files called with ", len(elements.Elements()))
 	q, err := elements.Query(vnic.Resources())
 	if err != nil {
 		return object.NewError(err.Error())
