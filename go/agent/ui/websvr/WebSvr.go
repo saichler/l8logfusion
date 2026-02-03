@@ -34,8 +34,8 @@ import (
 	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8types/go/types/l8health"
 	"github.com/saichler/l8types/go/types/l8web"
-	"github.com/saichler/l8utils/go/utils"
 	"github.com/saichler/l8utils/go/utils/ipsegment"
+	"github.com/saichler/l8utils/go/utils/shared"
 	"github.com/saichler/l8web/go/web/server"
 	common2 "github.com/saichler/probler/go/prob/common"
 )
@@ -66,7 +66,7 @@ func StartWebServer(port int, cert string) {
 		panic(err)
 	}
 
-	resources := utils.NewResources("logs-web-"+os.Getenv("HOSTNAME"), 12443, 30)
+	resources := shared.ResourcesOf("logs-web-"+os.Getenv("HOSTNAME"), 12443, 30, false)
 	nic := vnic.NewVirtualNetworkInterface(resources, nil)
 	nic.Resources().SysConfig().KeepAliveIntervalSeconds = 60
 	nic.Start()

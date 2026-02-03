@@ -34,8 +34,8 @@ import (
 
 	"github.com/saichler/l8bus/go/overlay/vnet"
 	"github.com/saichler/l8logfusion/go/agent/logserver"
-	"github.com/saichler/l8utils/go/utils"
 	"github.com/saichler/l8utils/go/utils/logger"
+	"github.com/saichler/l8utils/go/utils/shared"
 )
 
 // main initializes and starts the central log server.
@@ -43,7 +43,7 @@ import (
 // system signals to gracefully shut down.
 func main() {
 	vnetPort, _ := strconv.Atoi(os.Args[1])
-	r := utils.NewResources("logsVnet", uint16(vnetPort), 0)
+	r := shared.ResourcesOf("logsVnet", uint32(vnetPort), 0, false)
 	vnt := vnet.NewVNet(r)
 	vnt.Start()
 	logserver.ActivateLogService(vnt.VnetVnic())

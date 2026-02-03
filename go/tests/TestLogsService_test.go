@@ -31,9 +31,9 @@ import (
 	"github.com/saichler/l8logfusion/go/types/l8logf"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
-	"github.com/saichler/l8utils/go/utils"
 	"github.com/saichler/l8utils/go/utils/ipsegment"
 	"github.com/saichler/l8utils/go/utils/logger"
+	"github.com/saichler/l8utils/go/utils/shared"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -46,7 +46,7 @@ const (
 // startVnet creates and starts a virtual network with the log service activated.
 // Returns the running VNet instance for test coordination.
 func startVnet() *vnet.VNet {
-	r := utils.NewResources("logsVnet", vnetPort, 0)
+	r := shared.ResourcesOf("logsVnet", uint32(vnetPort), 0, false)
 	vnt := vnet.NewVNet(r)
 	vnt.Start()
 	logserver.ActivateLogService(vnt.VnetVnic())
@@ -64,7 +64,7 @@ func startVnet() *vnet.VNet {
 //   - ifs.IVNic: The initialized virtual network interface
 func startNic(logDir, logFile string) ifs.IVNic {
 	os.MkdirAll(logDir, 0755)
-	r := utils.NewResources("logs", vnetPort, 0)
+	r := shared.ResourcesOf("logs", uint32(vnetPort), 0, false)
 	r.SysConfig().RemoteVnet = ipsegment.MachineIP
 	nic := vnic.NewVirtualNetworkInterface(r, nil)
 	nic.Start()

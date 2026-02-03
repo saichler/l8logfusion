@@ -34,7 +34,7 @@ import (
 	"github.com/saichler/l8bus/go/overlay/vnic"
 	"github.com/saichler/l8logfusion/go/agent/logs"
 	"github.com/saichler/l8logfusion/go/types/l8logf"
-	"github.com/saichler/l8utils/go/utils"
+	"github.com/saichler/l8utils/go/utils/shared"
 )
 
 // main initializes and starts the log collector agent.
@@ -56,7 +56,7 @@ func main() {
 		panic("Env variable LOGFILE is not set")
 	}
 
-	r := utils.NewResources("logs", 26000, 30)
+	r := shared.ResourcesOf("logs", 26000, 30, true)
 	r.SysConfig().RemoteVnet = ip
 
 	nic := vnic.NewVirtualNetworkInterface(r, nil)
