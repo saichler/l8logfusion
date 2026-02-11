@@ -45,9 +45,9 @@ import (
 //   - vnic: The virtual network interface to register the service with
 //
 // The service stores logs at /data/logdb by default.
-func ActivateLogService(vnic ifs.IVNic) {
+func ActivateLogService(logDbPath string, vnic ifs.IVNic) {
 	sla := ifs.NewServiceLevelAgreement(&LogService{}, common.LogServiceName, common.LogServiceArea, true, nil)
-	sla.SetArgs("/data/logdb")
+	sla.SetArgs(logDbPath)
 	vnic.Resources().Services().Activate(sla, vnic)
 }
 

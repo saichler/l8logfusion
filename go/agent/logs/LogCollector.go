@@ -29,8 +29,6 @@ import (
 	"fmt"
 	common2 "github.com/saichler/probler/go/prob/common"
 	"os"
-	"path/filepath"
-	strings2 "strings"
 	"time"
 
 	"github.com/saichler/l8logfusion/go/agent/common"
@@ -48,6 +46,8 @@ type LogCollector struct {
 	logConfig *l8logf.L8LogConfig
 	// vnic is the virtual network interface for communicating with the log server
 	vnic ifs.IVNic
+	// tracker keeps track of which files are already being tailed
+	tracker *FileTracker
 }
 
 // NewLogCollector creates a new LogCollector instance with the specified configuration.
@@ -59,29 +59,25 @@ type LogCollector struct {
 // Returns:
 //   - *LogCollector: A configured collector ready to start monitoring
 func NewLogCollector(logConfig *l8logf.L8LogConfig, vnic ifs.IVNic) *LogCollector {
-	return &LogCollector{logConfig: logConfig, vnic: vnic}
+	return &LogCollector{logConfig: logConfig, vnic: vnic, tracker: NewFileTracker()}
 }
 
-// collect recursively scans a directory tree for log files and starts individual
-// collectors for each .log or .err file found. This method is used when wildcard
-// collection is configured (logConfig.Name == "*").
-func (this LogCollector) collect(path, name string) {
-	files, err := os.ReadDir(path)
-	if err != nil {
-		SendLogs(name, this.vnic, err.Error())
-		return
-	}
-	for _, file := range files {
-		if file.IsDir() {
-			this.collect(filepath.Join(path, file.Name()), name)
-		} else if strings2.HasSuffix(file.Name(), ".log") ||
-			strings2.HasSuffix(file.Name(), ".err") {
-			subLog := &l8logf.L8LogConfig{}
-			subLog.Path = path
-			subLog.Name = file.Name()
-			subCollector := NewLogCollector(subLog, this.vnic)
-			go subCollector.Collect()
+// collect scans a directory tree for log files and starts a TailFile goroutine
+// for each .log or .err file found. Each file is tracked to avoid duplicate tailing.
+// The location parameter controls where tailing starts (0 = beginning, -1 = end).
+func (this *LogCollector) collect(path, name string, location int64) {
+	files := ScanDir(path)
+	for _, fullPath := range files {
+		if this.tracker.IsTailed(fullPath) {
+			continue
 		}
+		this.tracker.MarkTailed(fullPath)
+		go func(fp string) {
+			err := TailFile(fp, this.vnic, location)
+			if err != nil {
+				SendLogs(name, this.vnic, err.Error())
+			}
+		}(fullPath)
 	}
 }
 
@@ -91,10 +87,11 @@ func (this LogCollector) collect(path, name string) {
 //
 // The method blocks until interrupted by a system signal when using wildcard collection,
 // or until an error occurs when monitoring a specific file.
-func (this LogCollector) Collect() {
+func (this *LogCollector) Collect() {
 	name := strings.New("agent-", this.logConfig.Path).String()
 	if this.logConfig.Name == "*" {
-		this.collect(this.logConfig.Path, name)
+		this.collect(this.logConfig.Path, name, 0)
+		go this.rescanLoop(name)
 		common2.WaitForSignal(this.vnic.Resources())
 		return
 	}
@@ -110,6 +107,24 @@ func (this LogCollector) Collect() {
 	err = TailFile(fullPath, this.vnic, 0)
 	if err != nil {
 		SendLogs(name, this.vnic, err.Error())
+	}
+}
+
+// rescanLoop periodically checks for new active log files in the monitored directory.
+// New files discovered are tailed from the end (location -1) to avoid replaying old data.
+func (this *LogCollector) rescanLoop(name string) {
+	for {
+		time.Sleep(30 * time.Second)
+		newFiles := this.tracker.NewActiveFiles(this.logConfig.Path)
+		for _, fp := range newFiles {
+			this.tracker.MarkTailed(fp)
+			go func(path string) {
+				err := TailFile(path, this.vnic, -1)
+				if err != nil {
+					SendLogs(name, this.vnic, err.Error())
+				}
+			}(fp)
+		}
 	}
 }
 

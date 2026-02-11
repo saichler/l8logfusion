@@ -175,12 +175,12 @@ func (this *LogService) Get(elements ifs.IElements, vnic ifs.IVNic) ifs.IElement
 	}
 	if q == nil {
 		fmt.Println("Query is nill ")
-		l8file := common.FileOf("/data/logdb")
+		l8file := common.FileOf(this.dbLocation)
 		return object.New(nil, l8file)
 	}
 	if q.ValueForParameter("path") == "*" {
 		fmt.Println("Path is *")
-		l8file := common.FileOf("/data/logdb")
+		l8file := common.FileOf(this.dbLocation)
 		return object.New(nil, l8file)
 	}
 	fmt.Println("Load Data case ", q.ValueForParameter("path"))

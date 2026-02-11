@@ -46,6 +46,6 @@ func main() {
 	r := shared.ResourcesOf("logsVnet", uint32(vnetPort), 0, false)
 	vnt := vnet.NewVNet(r)
 	vnt.Start()
-	logserver.ActivateLogService(vnt.VnetVnic())
+	logserver.ActivateLogService("/data/logdb", vnt.VnetVnic())
 	logger.WaitForSignal(r)
 }

@@ -74,13 +74,15 @@ func TailFile(filename string, nic ifs.IVNic, location int64) error {
 
 	reader := bufio.NewReader(file)
 
-	// Cooldown buffer configuration
-	const cooldownDuration = 100 * time.Millisecond
-	const maxBufferAge = 3 * time.Second
-	const maxBufferLines = 1000 // Prevent OOM from massive log bursts
+	// Buffer configuration tuned for ~100 concurrent tailers
+	const pollInterval = 1 * time.Second
+	const cooldownDuration = 2 * time.Second
+	const maxBufferAge = 30 * time.Second
+	const maxBufferBytes = 512 * 1024 // 512KB
 
 	lineBuffer := queues.NewQueue("LineBuffer", 30000)
-	lastLineTime := time.Now() // Initialize to current time instead of zero
+	bufferBytes := 0
+	lastLineTime := time.Now()
 	var lastFlushTime atomic.Int64
 	lastFlushTime.Store(time.Now().UnixNano())
 
@@ -97,7 +99,7 @@ func TailFile(filename string, nic ifs.IVNic, location int64) error {
 	}
 
 	for {
-		// Check current file size
+		// Check current file size — single Stat per iteration
 		fileInfo, err := file.Stat()
 		if err != nil {
 			return fmt.Errorf("failed to stat file: %w", err)
@@ -106,10 +108,9 @@ func TailFile(filename string, nic ifs.IVNic, location int64) error {
 
 		// Detect truncation: if current size is less than last known size
 		if currentSize < lastSize {
-			// Flush buffer before handling truncation
 			go flushBuffer()
+			bufferBytes = 0
 
-			// File was truncated, reopen and seek to beginning
 			file.Close()
 			file, err = os.Open(filename)
 			if err != nil {
@@ -118,37 +119,34 @@ func TailFile(filename string, nic ifs.IVNic, location int64) error {
 
 			reader = bufio.NewReader(file)
 			lastSize = 0
+			currentSize = 0
 		}
 
-		// Read new lines
+		// Skip reading if file hasn't grown — avoids ReadString calls on idle files
 		hasNewLines := false
-		for {
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				if err == io.EOF {
-					// No more data available
-					break
+		if currentSize > lastSize {
+			for {
+				line, err := reader.ReadString('\n')
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					return fmt.Errorf("error reading file: %w", err)
 				}
-				return fmt.Errorf("error reading file: %w", err)
+
+				lineBuffer.Add(line)
+				bufferBytes += len(line)
+				lastLineTime = time.Now()
+				hasNewLines = true
+
+				// Flush if buffer reaches max bytes to cap memory
+				if bufferBytes >= maxBufferBytes {
+					go flushBuffer()
+					bufferBytes = 0
+				}
 			}
-
-			// Add line to buffer
-			lineBuffer.Add(line)
-			lastLineTime = time.Now()
-			hasNewLines = true
-
-			// Flush if buffer reaches max size to prevent OOM
-			if lineBuffer.Size() >= maxBufferLines {
-				go flushBuffer()
-			}
+			lastSize = currentSize
 		}
-
-		// Update last known size
-		fileInfo, err = file.Stat()
-		if err != nil {
-			return fmt.Errorf("failed to stat file: %w", err)
-		}
-		lastSize = fileInfo.Size()
 
 		// Check flush conditions
 		timeSinceLastLine := time.Since(lastLineTime)
@@ -156,15 +154,13 @@ func TailFile(filename string, nic ifs.IVNic, location int64) error {
 		timeSinceLastFlush := time.Since(lastFlushTimeValue)
 
 		if lineBuffer.Size() > 0 {
-			// Flush if cooldown period passed without new lines
-			// OR if max buffer age exceeded
 			if (!hasNewLines && timeSinceLastLine >= cooldownDuration) ||
 				timeSinceLastFlush >= maxBufferAge {
 				go flushBuffer()
+				bufferBytes = 0
 			}
 		}
 
-		// Brief sleep before next check
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(pollInterval)
 	}
 }
